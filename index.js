@@ -23,7 +23,11 @@ app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json());
 
-const serviceAccount = require("./firebase-admin-key.json");
+const decoded = Buffer.from(process.env.FB_SERVICE_KEY, "base64").toString(
+  "utf8"
+);
+const serviceAccount = JSON.parse(decoded);
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
@@ -42,7 +46,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     // code starts from here =>
 
@@ -493,6 +497,21 @@ async function run() {
 
     // rider starts here
 
+    // GET all active and deactive riders
+    app.get("/riders/active-deactive", async (req, res) => {
+      try {
+        const riders = await ridersCollection
+          .find({ status: { $in: ["active", "deactive"] } })
+          .toArray();
+
+        console.log("Riders fetched:", riders.length); // check server console
+        res.send(riders);
+      } catch (error) {
+        console.error("Failed to load riders", error);
+        res.status(500).send({ message: "FAILED TO LOAD RIDERS" });
+      }
+    });
+
     app.get(
       "/rider/completed_parcels",
       verifyFBToken,
@@ -760,10 +779,10 @@ async function run() {
     // code ends here ||
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // await client.db("admin").command({ ping: 1 });
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
