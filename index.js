@@ -495,7 +495,8 @@ async function run() {
       }
     });
 
-    // rider starts here
+    // rider starts here :
+    //
 
     // GET all active and deactive riders
     app.get("/riders/active-deactive", async (req, res) => {
